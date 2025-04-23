@@ -1,0 +1,142 @@
+import os
+import zipfile
+
+# Create directory structure and files for the Expense Tracker project
+base_dir = "/mnt/data/expense-tracker"
+os.makedirs(f"{base_dir}/src/components", exist_ok=True)
+
+# File contents
+files = {
+    f"{base_dir}/src/App.js": """\
+import React, { useState } from 'react';
+import ExpenseForm from './components/ExpenseForm';
+import ExpenseList from './components/ExpenseList';
+
+function App() {
+  const [expenses, setExpenses] = useState([]);
+
+  const addExpense = (expense) => {
+    setExpenses([...expenses, expense]);
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses(expenses.filter(exp => exp.id !== id));
+  };
+
+  return (
+    <div className="App">
+      <h1>Expense Tracker</h1>
+      <ExpenseForm onAdd={addExpense} />
+      <ExpenseList expenses={expenses} onDelete={deleteExpense} />
+    </div>
+  );
+}
+
+export default App;
+""",
+    f"{base_dir}/src/components/ExpenseForm.js": """\
+import React, { useState } from 'react';
+
+const ExpenseForm = ({ onAdd }) => {
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newExpense = {
+      id: Date.now(),
+      amount,
+      category,
+    };
+    onAdd(newExpense);
+    setAmount('');
+    setCategory('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="number"
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        required
+      />
+      <input
+        type="text"
+        placeholder="Category"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        required
+      />
+      <button type="submit">Add Expense</button>
+    </form>
+  );
+};
+
+export default ExpenseForm;
+""",
+    f"{base_dir}/src/components/ExpenseList.js": """\
+import React from 'react';
+
+const ExpenseList = ({ expenses, onDelete }) => {
+  return (
+    <ul>
+      {expenses.map((expense) => (
+        <li key={expense.id}>
+          {expense.category}: ₹{expense.amount}
+          <button onClick={() => onDelete(expense.id)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export default ExpenseList;
+""",
+    f"{base_dir}/src/index.js": """\
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+""",
+    f"{base_dir}/package.json": """\
+{
+  "name": "expense-tracker",
+  "version": "1.0.0",
+  "description": "Simple Expense Tracker using React",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-scripts": "5.0.1"
+  }
+}
+"""
+}
+
+# Write files to disk
+for filepath, content in files.items():
+    with open(filepath, "w") as f:
+        f.write(content)
+
+# Create a zip file
+zip_path = "/mnt/data/expense-tracker.zip"
+with zipfile.ZipFile(zip_path, "w") as zipf:
+    for foldername, subfolders, filenames in os.walk(base_dir):
+        for filename in filenames:
+            file_path = os.path.join(foldername, filename)
+            arcname = os.path.relpath(file_path, base_dir)
+            zipf.write(file_path, arcname=arcname)
+
+zip_path
